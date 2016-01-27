@@ -8,6 +8,8 @@ import pickle
 from matplotlib import pyplot as plt
 import sys # progress bar, exiting
 
+# added a comment as a test - SHL
+
 def load_images(folder):
     images = []
     fnames = []
