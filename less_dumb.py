@@ -29,13 +29,13 @@ def progress(end_val, bar_length=20):
         percent = float(i) / end_val
         hashes = '#' * int(round(percent * bar_length))
         spaces = ' ' * (bar_length - len(hashes))
-        sys.stdout.write("\rProgress: [{0}] {1}%".format(hashes + spaces, int(round(percent * 100))))
+        sys.stdout.write("Progress: [{0}] {1}%\r".format(hashes + spaces, int(round(percent * 100))))
         sys.stdout.flush()
 
 def main():
     
-    db_img_dir = '../FRF source images/'
-    query_img_dir = '../FRF sample images/smallquery/'
+    db_img_dir = 'FRF source images/'
+    query_img_dir = 'FRF sample images/smallquery/'
 
     db_filenames, db_images = load_images(db_img_dir)
     query_filenames, query_images = load_images(query_img_dir)
