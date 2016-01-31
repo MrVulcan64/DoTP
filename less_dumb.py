@@ -2,11 +2,11 @@ import cv2
 import os
 import os.path
 import numpy as np
-import datetime
 import time
-import pickle 
+import pickle
 from matplotlib import pyplot as plt
-import sys # progress bar, exiting
+import sys  # progress bar
+
 
 def load_images(folder):
     images = []
@@ -19,9 +19,10 @@ def load_images(folder):
             if img is not None:
                 images.append(img)
                 fnames.append(filename)
-   # for i in range(len(filenames)): # for debugging
-   # cv2.imwrite('/Users/Ardon/PycharmProjects/DoTP/testOut/' + filenames[i], images[i])
+    # for i in range(len(filenames)): # for debugging
+    # cv2.imwrite('/Users/Ardon/PycharmProjects/DoTP/testOut/' + filenames[i], images[i])
     return (fnames, images)
+
 
 # Progress bar
 def progress(end_val, bar_length=20):
@@ -29,11 +30,15 @@ def progress(end_val, bar_length=20):
         percent = float(i) / end_val
         hashes = '#' * int(round(percent * bar_length))
         spaces = ' ' * (bar_length - len(hashes))
-        #sys.stdout.write("Progress: [{0}] {1}%\r".format(hashes + spaces, int(round(percent * 100))))
-        #sys.stdout.flush()
+        # sys.stdout.write("Progress: [{0}] {1}%\r".format(hashes + spaces, int(round(percent * 100))))
+        # sys.stdout.flush()
+
 
 def main():
-    
+    if len(sys.argv)>1 and sys.argv[1] == "-f":
+        forcecompute = True
+    else:
+        forcecompute = False
     db_img_dir = 'FRF source images/'
     query_img_dir = 'FRF sample images/smallquery/'
 
@@ -46,23 +51,23 @@ def main():
     print("Query files:")
     print(query_filenames)
     """
-    PickleCheck = os.path.exists("/Users/Ardon/PycharmProjects/DoTP/pickles/keypoints.pickle") and os.path.exists("/Users/Ardon/PycharmProjects/DoTP/pickles/descriptors.pickle")
-    ForceCompute = False
+    picklecheck = os.path.exists("/Users/Ardon/PycharmProjects/DoTP/pickles/keypoints.pickle") and os.path.exists(
+        "/Users/Ardon/PycharmProjects/DoTP/pickles/descriptors.pickle")
     surf = cv2.xfeatures2d.SURF_create(400)
     # Unpickle database
-    if PickleCheck and not ForceCompute:
+    if picklecheck and not forcecompute:
         print("Unpickling...")
         kps = []
         descs = pickle.loads(open("/Users/Ardon/PycharmProjects/DoTP/pickles/descriptors.pickle", "rb").read())
         Bindex = pickle.loads(open("/Users/Ardon/PycharmProjects/DoTP/pickles/keypoints.pickle", "rb").read())
-        for card in Bindex:        
+        for card in Bindex:
             kp = []
             for point in card:
                 temp = cv2.KeyPoint(*point)
                 kp.append(temp)
             kps.append(kp)
         print("Unpickling complete.")
-    else: # Pre-compute key points of database images
+    else:  # Pre-compute key points of database images
         print("Pre-computing database...")
         # print (str(range(len(db_images))) + " = length db_images") # for debugging
         kps = [None] * len(db_images)
@@ -96,7 +101,7 @@ def main():
         print()
         print("done pickling.")
         print()
-    
+
     # Match query cards to database
     matchMat = np.zeros((len(db_images), len(query_images)))
     # print (str(range(len(query_images))) + " = length query_images") # for debugging
@@ -108,18 +113,18 @@ def main():
         print()
         start_time = time.time()
 
-        print ("Now matching: " + query_filenames[i])
+        print("Now matching: " + query_filenames[i])
         for j in range(len(db_images)):
             progress(j)
             # BFMatcher with default params
             bf = cv2.BFMatcher()
-            matches = bf.knnMatch(des_query,descs[j], k=2)
+            matches = bf.knnMatch(des_query, descs[j], k=2)
 
             # Apply ratio test
             good_count = 0
-            for m,n in matches:
-                if m.distance < 0.75*n.distance:
-                     good_count = good_count + 1
+            for m, n in matches:
+                if m.distance < 0.75 * n.distance:
+                    good_count = good_count + 1
 
             matchMat[j][i] = good_count
 
@@ -129,28 +134,28 @@ def main():
 
             # print out pictures
             good = []
-            for m,n in matches:
-                if m.distance < 0.75*n.distance:
+            for m, n in matches:
+                if m.distance < 0.75 * n.distance:
                     good.append([m])
 
             # cv2.drawMatchesKnn expects list of lists as matches.
             img_out = None
-            img_out = cv2.drawMatchesKnn(db_images[j],kps[j],query_images[i],kp_query,good,img_out,flags=2)
-           # print ()
-           # cv2.imwrite(os.path.join('testOut', 'db_' + db_filenames[j] + '_q_' + query_filenames[i]), img_out)
-           #print('Now checking ' + query_filenames[i] + ' against ' + db_filenames[j] + "......" + str(good_count))
-            
+            img_out = cv2.drawMatchesKnn(db_images[j], kps[j], query_images[i], kp_query, good, img_out, flags=2)
+            # print ()
+            # cv2.imwrite(os.path.join('testOut', 'db_' + db_filenames[j] + '_q_' + query_filenames[i]), img_out)
+            # print('Now checking ' + query_filenames[i] + ' against ' + db_filenames[j] + "......" + str(good_count))
+
         print()
         print(query_filenames[i] + " matched with:")
         print(db_filenames[maxIDX])
-        
+
         elapsed_time = time.time() - start_time
         print(str(elapsed_time)[0:3] + " seconds")
-        
-    #print (matchMat)
-    
+
+    # print (matchMat)
+
     return
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
     main()
