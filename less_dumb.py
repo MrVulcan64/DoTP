@@ -20,7 +20,7 @@ def load_images(folder):
                 images.append(img)
                 fnames.append(filename)
    # for i in range(len(filenames)): # for debugging
-   # cv2.imwrite('/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/testOut/' + filenames[i], images[i])
+   # cv2.imwrite('/Users/Ardon/PycharmProjects/DoTP/testOut/' + filenames[i], images[i])
     return (fnames, images)
 
 # Progress bar
@@ -29,8 +29,8 @@ def progress(end_val, bar_length=20):
         percent = float(i) / end_val
         hashes = '#' * int(round(percent * bar_length))
         spaces = ' ' * (bar_length - len(hashes))
-        sys.stdout.write("Progress: [{0}] {1}%\r".format(hashes + spaces, int(round(percent * 100))))
-        sys.stdout.flush()
+        #sys.stdout.write("Progress: [{0}] {1}%\r".format(hashes + spaces, int(round(percent * 100))))
+        #sys.stdout.flush()
 
 def main():
     
@@ -46,29 +46,28 @@ def main():
     print("Query files:")
     print(query_filenames)
     """
-
-    kps = [None] * len(db_images)
-    descs = [None] * len(db_images)
-
+    PickleCheck = os.path.exists("/Users/Ardon/PycharmProjects/DoTP/pickles/keypoints.pickle") and os.path.exists("/Users/Ardon/PycharmProjects/DoTP/pickles/descriptors.pickle")
+    ForceCompute = False
+    surf = cv2.xfeatures2d.SURF_create(400)
     # Unpickle database
-    PickleCheck = os.path.exists("/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/keypoints.pickle") and os.path.exists("/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/descriptors.pickle")
-    ForceCompute = True
-    # something's wrong with the flow control. When False, surf isn't defined yet. Not sure why.
-    if PickleCheck and not ForceCompute: # Unpickle saved dabatase
-        print ("Unpickling...")
-        descs = pickle.loads(open("/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/descriptors.pickle", "rb").read())
-        Bindex = pickle.loads(open("/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/keypoints.pickle", "rb").read()) 
+    if PickleCheck and not ForceCompute:
+        print("Unpickling...")
+        kps = []
+        descs = pickle.loads(open("/Users/Ardon/PycharmProjects/DoTP/pickles/descriptors.pickle", "rb").read())
+        Bindex = pickle.loads(open("/Users/Ardon/PycharmProjects/DoTP/pickles/keypoints.pickle", "rb").read())
         for card in Bindex:        
             kp = []
             for point in card:
                 temp = cv2.KeyPoint(*point)
                 kp.append(temp)
             kps.append(kp)
+        print("Unpickling complete.")
     else: # Pre-compute key points of database images
         print("Pre-computing database...")
         # print (str(range(len(db_images))) + " = length db_images") # for debugging
+        kps = [None] * len(db_images)
+        descs = [None] * len(db_images)
         for i in range(len(db_images)):
-            surf = cv2.xfeatures2d.SURF_create(400)
             kps[i], descs[i] = surf.detectAndCompute(db_images[i], None)
             progress(i)
         print()
@@ -86,12 +85,12 @@ def main():
             bindex.append(index)
 
         # Dump the keypoints
-        f = open("/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/keypoints.pickle", "wb")
+        f = open("/Users/Ardon/PycharmProjects/DoTP/pickles/keypoints.pickle", "wb")
         f.write(pickle.dumps(bindex))
         f.close()
 
         # Dump the descriptors
-        f = open("/Users/Ardon/Documents/Dropbox/DotP/Python OpenCV/descriptors.pickle", "wb")
+        f = open("/Users/Ardon/PycharmProjects/DoTP/pickles/descriptors.pickle", "wb")
         f.write(pickle.dumps(descs))
         f.close()
         print()
@@ -142,11 +141,11 @@ def main():
            #print('Now checking ' + query_filenames[i] + ' against ' + db_filenames[j] + "......" + str(good_count))
             
         print()
-        print (query_filenames[i] + " matched with:") 
-        print (db_filenames[maxIDX])
+        print(query_filenames[i] + " matched with:")
+        print(db_filenames[maxIDX])
         
         elapsed_time = time.time() - start_time
-        print (str(elapsed_time)[0:3] + " seconds")
+        print(str(elapsed_time)[0:3] + " seconds")
         
     #print (matchMat)
     
